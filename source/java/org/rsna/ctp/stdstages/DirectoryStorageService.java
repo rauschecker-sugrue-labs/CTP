@@ -317,7 +317,20 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private String getElementValue(DicomObject dob, String group) {
 		String value = "";
-		try { value = dob.getElementString(group); }
+		try { 
+			// Use getElementValue instead of getElementString to get the full multi-value string
+			value = dob.getElementValue(group, "");
+			// Special handling for ART/SUB pattern in OperatorsName
+			if (value.contains("ART:") && value.contains("SUB:")) {
+				value = value.replace("ART:", "ART_")
+							.replace("SUB:", "SUB_")
+							.replace("\\", "/");
+			}
+			// General handling for other multi-valued fields
+			else {
+				value = value.replace(":", "_").replace("\\", "_");
+			}
+		}
 		catch (Exception ex) { logger.debug("......exception processing: "+group); }
 		return value;
 	}
