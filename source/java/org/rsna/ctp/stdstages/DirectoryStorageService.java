@@ -320,11 +320,18 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		try { 
 			// Use getElementValue instead of getElementString to get the full multi-value string
 			value = dob.getElementValue(group, "");
-			// Special handling for ART/SUB pattern in OperatorsName
-			if (value.contains("ART:") && value.contains("SUB:")) {
-				value = value.replace("ART:", "ART_")
-							.replace("SUB:", "SUB_")
-							.replace("\\", "/");
+			// Special handling for GroupName ART ProjectID\SUB SubjectID pattern
+			if (value.contains(" ART ") && value.contains("\\SUB ")) {
+				// Split on the backslash separator
+				String[] parts = value.split("\\\\");
+				if (parts.length >= 2) {
+					// First part: "GroupName ART ProjectID" -> "GroupName_ART_ProjectID"
+					String firstPart = parts[0].trim().replace(" ", "_");
+					// Second part: "SUB SubjectID" -> "SubjectID" (remove SUB prefix)
+					String secondPart = parts[1].trim().replace("SUB ", "");
+					
+					value = firstPart + "/" + secondPart;
+				}
 			}
 			// General handling for other multi-valued fields
 			else {
